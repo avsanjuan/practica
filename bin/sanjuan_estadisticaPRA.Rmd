@@ -1,0 +1,535 @@
+---
+title: 'A4 Análisis de varianza y repaso del curso'
+author: "Autor: Angel Vicente Sanjuan Martin"
+date: "Diciembre-Enero 2021/22"
+output:
+  word_document: default
+  pdf_document: 
+    fig_width: 4
+    toc: yes
+  html_document: 
+    number_sections: yes
+    theme: cosmo
+    toc: yes
+    toc_depth: 2
+---
+
+```{r echo = TRUE, message= FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Introducción
+El conjunto de datos CensusIncomedata.txt se inspira (ha sido modificado por motivos académicos) en un elemento de la base de datos disponible en la web Machine Learning Repository: https://archive.ics.uci.edu/ml/datasets/Adult.
+
+Este conjunto de datos contiene información de una muestra extraída a partir de un censo, en el que para cada persona, se registran los salarios aparte de información personal adicional. El conjunto de datos contiene 32.560 registros y 9 variables.
+
+Las variables de esta muestra son:
+
+• Age: Edad del individuo.
+
+• Workclass: Categorización del individuo en base al perfil laboral.
+
+• Education_num: Número de años de formación educativa del individuo.
+
+• Marital_status: Estado civil del individuo.
+
+• Occupation: Categorización del individuo en base a la tipología de trabajo.
+
+• Race: Grupo racial al que pertenece el individuo.
+
+• Sex: Género del individuo.
+
+• hours_per_week: Horas por semana trabajadas por el individuo.
+
+• income: Salario (anual) del individuo, en k€.
+
+Estos datos nos ofrecen múltiples posibilidades para consolidar los conocimientos y competencias de manipulación de datos, preprocesamiento, análisis descriptivo e inferencia estadística, así como la regresión (lineal y logística) y el Análisis de Variancia (ANOVA).
+
+Verás que, en relación a estos datos, pondremos el foco en el estudio de la probabilidad de no alcanzar cierto umbral de retribución económica en base a las características descritas en el conjunto de datos.
+
+#################################################################################
+## Test de contraste de medias con varianza conocida para 2 muestras independientes 
+#################################################################################
+```{r echo = TRUE, message= FALSE, warning=FALSE}
+ test.contraste<- function(X, Y, alfa=0.05, delta=0){
+
+  var1 <- var(X)
+  mean1 <- mean(X[,1])
+  nreg <- count(X)
+  n1<-nreg$n
+
+  var2 <- var(Y)
+  mean2 <- mean(Y[,1])
+  nreg <- count(Y)
+  n2 <- nreg$n
+
+  
+  zobs <- (mean1-mean2-delta)/sqrt(var1/n1 + var2/n2)
+  zcrit <- qnorm(1-alfa)
+  pvalue <- pnorm(zobs, lower.tail=FALSE)
+  
+  result <- c( zobs, zcrit, pvalue )
+
+  return(result)
+}
+```
+
+
+#################################################################################
+## Librerias
+#################################################################################
+Carga de librerias a utilizar
+```{r echo = TRUE, message= FALSE, warning=FALSE}
+# Carga de los paquetes R que vamos a usar
+library(ggplot2)
+library(corrplot)
+library(dplyr)
+library(stringr)
+library(lubridate)
+library(reshape)
+library(VIM)
+library(MASS)
+library(robustHD)
+library(pastecs)
+library(psych)
+library(nortest)
+```
+####################################################
+## 2 Lectura del archivo y preparación de los datos.
+####################################################
+Leer el archivo CensusIncomedada.txt y guardar los datos en un objeto con identificador denominado adult. A continuación, verifica que los datos se han cargado correctamente.
+
+```{r echo = TRUE, message= FALSE, warning=FALSE}
+# Guardar en memoría los conjuntos de datos
+adult <- read.table('../csv/CensusIncomedata.txt', sep=" ", header=TRUE, dec = ".")
+# Verificar la estructura de datos
+str(adult)
+head(adult)
+```
+
+### 2.1 Preparación de Datos
+```{r echo = TRUE, message= FALSE, warning=FALSE}
+#Quitar espacios en blanco
+cols <- c("workclass", "marital_status", "occupation", "race", "sex")
+for (i in cols){
+  adult[,i] <- trimws(adult[,i], which=c("both","left","right"), whitespace = "[ \t\r\n]")
+}
+#cambio de nombre a la columna "sex" por "gender"
+#colnames(adult)[7] <- "gender"
+#estudio de la normalidad en "income"
+z<-adult$income
+hist(z, freq = F, xlim = c(10, 100), border = "gray50")
+lines(density(z), ylim = c(0, 0.8), xlim = c(10, 200), lwd = 2)
+curve(dnorm(x, mean(z), sd(z)), lwd = 2, col = "blue", add = T)
+legend("topleft", c("curva observada", "curva (normal) teórica"),
+       lty = 1, lwd = 2, col = c("black", "blue"), bty = "n",
+       cex = 0.8)
+
+qqnorm(z)
+qqline(z)
+
+lillie.test(z)
+
+str(adult)
+                          
+```
+
+
+
+### 2.2 Comprobación de Normalidad
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+x<- claim$UltCost
+qqnorm(x) 
+qqline(x)
+m<-mean(x)
+s<-sd(x)
+hist(x, freq = F,  border = "gray50", main = "Histograma Coste Final sin escala logarítmica",  xlab = "Coste")
+lines(density(x), ylim = c(0,1), xlim = c(1, 15), lwd = 2)
+curve(dnorm(x, mean=m, sd=s), lwd = 2, col = "red", add = T)
+legend("topleft", c("curva observada", "curva (normal) teórica"),
+       lty = 1, lwd = 2, col = c("black", "red"), bty = "n",
+       cex = 0.8)
+lillie.test(x)
+
+x<- log(claim$UltCost)
+qqnorm(x) 
+qqline(x)
+m<-mean(x)
+s<-sd(x)
+hist(x, freq = F,  border = "gray50", main = "Histograma Coste Final con escala logarítmica",  xlab = "Coste")
+lines(density(x), ylim = c(0,1), xlim = c(1, 15), lwd = 2)
+curve(dnorm(x, mean=m, sd=s),  col = "red", add = T)
+legend("topleft", c("curva observada", "curva (normal) teórica"),
+       lty = 1, lwd = 2, col = c("black", "red"), bty = "n",
+       cex = 0.8)
+lillie.test(x)
+```
+
+Si el valor de probabilidad (p-value) que obtenemos por la prueba es menor a 0.05 diremos que “nuestros datos no siguen una #distribución normal”. Si el valor de probabilidad es mayor a 0.05, diremos que “nuestros datos sí siguen una distribución normal”. 
+
+En la primera visualización se ve claramente que no se sigue una distribución normal, dato que se corrobora con con el test de Lilliefors.En la segunda visualización (con escala logarítmica), en el gráfico la curva teórica es clavada a la curva observada por lo cual se puede afirmar que los datos siguen una distribución normal, y, el test de Lilliefors nos lo demuestra.
+
+
+### 2.3 Intervalo de confianza de la media poblacional de la variable UltCost
+
+Para calcular el intervalo de confianza, utilizamos la siguiente fórmula:
+
+$\mu_{95}=\bar X \pm Z_{\frac{\alpha}{2}} \frac{S}{\sqrt{n}}$
+
+```{r echo = TRUE, message= FALSE, warning=FALSE}  
+x<- claim$UltCost
+alfa <- 0.05
+media<-mean(x) #media
+desv<-sd(x)    #desviación estándar
+nreg<-count(claim,"UltCost")
+n<-nreg$n      #tamaño de la muestra
+z <- qnorm(1-alfa) # valor fijo para el 95% de confianza 
+
+error.est <- desv/sqrt(n) # Calculamos el error estándar
+margen.error <- z * error.est # nivel de confianza de 95% 
+lim.inf <- media - margen.error # Límite inferior del intervalo
+
+lim.sup <- media + margen.error # Límite superior del intervalo
+
+intervalo<-c(lim.inf, lim.sup)
+intervalo
+```
+
+Los datos obtenidos corraboran la hipótesis de la NO distribución normal sobre la media del coste en escala original, ya el intervalo de confianza es muy pequeño y la desviación estándar es mucho mayor que la media, lo cual indica que hay muchos valores muy altos y muchos muy bajos (outliers)
+
+La interpretación de los datos, viene a ser que para tener una distribución normal (valores que se ajustan a la normalidad), el coste debería estar comprendido entre 9938.86 y 10356.47
+
+#######################################################
+## 3 - Coste inicial y final de los siniestros
+#######################################################
+La compañía de seguros está interesada en investigar si la estimación inicial del coste que hace de los siniestros (IniCost) en promedio es suficiente para cubrir el coste total pagado (UltCost). Para eso, nos plantean la pregunta siguiente:
+¿Podemos aceptar que no hay diferencias entre IniCost y UltCost?
+Responded a la pregunta utilizando un nivel de confianza del 95%.
+
+### 3.1 Justificación del test a aplicar
+Explicad qué tipo de contraste se puede aplicar en este caso. Es decir, explicad si se trata de un contraste de
+una muestra o dos muestras, sobre la media/varianza/proporción, si es bilateral o unilateral, etcétera.
+
+Se trata de un Contraste bilateral entre 2 muestras sobre la media , ya que la pregunta es si el coste inicial es igual al coste final con un margen de confianza del 95%
+
+### 3.2 Escribid la hipótesis nula y la alternativa
+
+
+Hipótesis:
+
+$H_0 : \mu = \mu_0$       El coste final y el coste inicial son iguales
+
+$H_1 : \mu \neq \mu_0$    El coste final es diferente al coste inicial
+
+### 3.3 Cálculos
+
+```{r echo = TRUE, message= FALSE, warning=FALSE}
+x <-subset(claim,  select = c(UltCost) )
+y <-subset(claim,  select = c(IniCost) )
+c<-test.contraste(X=x,Y=y)
+c
+#c( zobs, zcrit, pvalue )
+
+```
+
+### 3.4 Conclusión
+
+De los datos obtenidos se puede afirmar que los costes iniciales o estimados NO son iguales a los Costes Finales, ya que el valor p es inferior al valor de significancia $\alpha$ 0.05
+
+Es decir, rechazamos la Hipótesis nula $H_0$
+
+### 3.5 Comprobación
+ 
+```{r echo = TRUE, message= FALSE, warning=FALSE}
+t.test(
+  x           = claim$UltCost,        #Coste Final
+  y           = claim$IniCost,        #Coste Inicial
+  alternative = "two.sided"           #Hipotesis alternativa <>
+  )
+
+```
+Si p-value < a 0.05 se cumple la hipótesis alternativa, y como vemos éste es el caso
+
+
+#######################################################
+## 4 - Diferencia de salario según género
+#######################################################
+Existe una opinión generalizada que las mujeres cobran menos que los hombres. Vamos a comprobar qué dicen los datos al respecto. Nos preguntamos si las mujeres reciben un menor salario (WeeklyWages) que los hombres.
+Para ello, debéis obtener dos muestras. La primera muestra contiene todas las mujeres (Gender igual a F). La segunda muestra contiene todos los hombres (Gender igual a M). Usad un nivel de confianza del 95%.
+
+### 4.1 Análisis visual
+En primer lugar, mostrad en un diagrama de caja la distribución de la variable WeeklyWages (en logaritmos) según el género.
+```{r echo = TRUE, message= FALSE, warning=FALSE} 
+  boxplot(formula = log(WeeklyWages)~Gender, data = claim, main = "Salario Semanal por Género", 
+     xlab = "Genero", ylab = "Salario", 
+     col = c("purple", "blue", "green3"))
+```
+
+### 4.2 Interpretación
+Interpretad cualitativamente el gráfico mostrado en el apartado anterior, explicando si se pueden observar diferencias (visualmente) entre el salario de mujeres y hombres.
+
+Se observa que la media del salario del género masculino es ligeramente superior al femenino, el cual tiene mas rango en los outliers (sobre todo por el extremo inferior), también tiene mas rango dentro de los cuartiles, de lo cual se deduce que aunque el salario del género femenino es ligeramente inferior al masculino, está mas agrupado y tiende hacia una normalización , por el contrario el salario del género masculino está mas disperso y los outliers por arriba son mucho mas números.
+Definitivamente, el salario del genero masculino es superior al femenino.
+
+### 4.3 Escribir la hipótesis nula y la alternativa
+Escribid las hipótesis nula y alternativa para la pregunta de investigación siguiente:
+¿Podemos aceptar que los hombres cobran más que las mujeres en promedio a la semana?
+
+Hipótesis: 
+
+$H_0 : \mu_m = \mu_f$
+
+$H_1 : \mu_m > \mu_f$
+
+### 4.4 Justificación del test a aplicar
+Voy a aplicar un test de contraste de dos muestras diferentes sobre la media con varianza conocida, el test es unilateral por la derecha 
+es unilateral ya que la hipótesis alternativa no es una desigualdad pura, sino que es un signo mayor, y voy a tratar dos muestras diferentes por género
+
+### 4.5 Cálculos
+Realizad los cálculos del estadístico de contraste, valor crítico y valor p con un nivel de confianza del 95%.
+
+```{r echo = TRUE, message= FALSE, warning=FALSE}
+
+claim.m <-subset(claim, Gender == 'M',  select = c(WeeklyWages) )
+claim.f <-subset(claim, Gender == 'F',  select = c(WeeklyWages) )
+
+c<-test.contraste(X=claim.m, Y=claim.f)
+#c( zobs, zcrit, pvalue )
+c
+```
+### 4.6 Conclusión
+A partir de los valores obtenidos, debéis concluir si podemos aceptar o rechazar la hipótesis. Asimismo, responded la pregunta formulada.
+
+Dado que p-value (7.435311e-183) es menor al valor de significancia $\alpha$ (0.05) podemos rechazar la hipótesis nula $H_0 : \mu_m = \mu_f$ y aceptar la hipótesis alternativa $H_1 : \mu_m > \mu_f$ afirmando que de la muestra analizada, los hombres cobran mas que la mujeres en promedio a la semana
+
+
+### 4.7 Comprobación
+Comprobar si los valores obtenidos coinciden con los de la función de R t.test.
+```{r echo = TRUE, message= FALSE, warning=FALSE}  
+t.test(claim.m$WeeklyWages,claim.f$WeeklyWages,alternative="greater", var.equal=FALSE)
+```
+#######################################################
+## 5 - Salario semanal (II)
+#######################################################
+En este apartado, seguimos interesados en investigar si los hombres tienen un salario mayor a las mujeres, y si éste es mayor en una cantidad de 50 euros como mínimo. Por tanto, la pregunta que realizamos es:
+¿Podemos aceptar que los hombres cobran al menos 50 euros más que las mujeres en promedio a la semana?
+
+### 5.1 Escribid la hipótesis nula y la alternativa
+Hipótesis:
+
+$H_0 : (\mu_m - \mu_f) = \delta_0 :$      Los hombres en promedio no cobran más de 50 euros que las mujeres.
+
+$H_1 : (\mu_m - \mu_f) > \delta_0 :$      Los hombres en promedio cobran al menos 50 euros más que las mujeres,
+
+$\delta_0 = 49$  
+
+
+### 5.2 Justificación del test a aplicar
+
+Voy a utilizar un test de Contrastes de dos muestras independientes sobre la media con varianzas conocidas, con la particularidad de comprobar si las diferencias entre las dos muestras lo son en una cantidad $\delta_0$ 
+
+### 5.3 Cálculos
+Realizad los cálculos del estadístico de contraste, valor crítico y valor p con un nivel de confianza del 95%.
+
+```{r echo = TRUE, message= FALSE, warning=FALSE}
+delta <- 50
+c<-test.contraste(X=claim.m, Y=claim.f, delta=delta)
+#c( zobs, zcrit, pvalue )
+c
+
+```
+### 5.4 Conclusión
+A partir de los valores obtenidos, debéis concluir si podemos aceptar o rechazar la hipótesis. Asimismo, responded la pregunta formulada.
+
+Dado que p-value (2.2e-16) es menor al valor de significancia $\alpha$ (0.05) podemos rechazar la hipótesis nula $H_0 : (\mu_m - \mu_f) = \delta_0$  Los hombres en promedio no cobran más de 50 euros que las mujeres. y aceptar la hipótesis alternativa $H_1 : (\mu_m - \mu_f) > \delta_0 $  Los hombres en promedio cobran al menos 50 euros más que las mujeres, para $\delta_0 = 49$ ,afirmando que de la muestra analizada, los hombres cobran al menos 50 euros más que la mujeres en promedio a la semana
+
+
+### 5.5 Comprobación
+Comprobar si los valores obtenidos coinciden con los de la función de R t.test.
+```{r echo = TRUE, message= FALSE, warning=FALSE} 
+
+t.test(claim.m$WeeklyWages,
+       claim.f$WeeklyWages,
+       alternative="greater", 
+       mu = 49, var.equal=FALSE, 
+       conf.level = .95
+       )
+
+```
+Vemos que en efecto , se rechaza la hipótesis nula al tener p-value un valor menor a 0.05
+
+
+##########################################
+## 6 - Diferencia de jornada según género
+##########################################
+Existe una opinión generalizada que las mujeres tienden a utilizar más la jornada a tiempo parcial. Vamos a comprobar qué dicen los datos al respecto.
+Nos preguntamos si las mujeres realizan más frecuentemente una jornada a tiempo parcial PartTimeFullTime que los hombres.
+
+### 6.1 Análisis visual
+Mostrad un un diagrama de barras que muestre los porcentajes de cada categoría de la variable PartTimeFullTime según el género.
+```{r echo = TRUE, message= FALSE, warning=FALSE} 
+
+x <- subset(claim, Gender=="M", select = c(PartTimeFullTime, Gender))
+x.m <- x %>%
+  group_by(PartTimeFullTime) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(pct = n /sum(n)*100) 
+  
+head(x.m)
+ggplot(data=x.m) + 
+  geom_bar(mapping = aes(x=PartTimeFullTime, y=pct, fill=pct), stat = "identity") +
+  ggtitle("Porcentajes Tiempo Total/Parcial semanal de Hombres")  
+  
+x<-subset(claim, Gender=="F", select = c(PartTimeFullTime, Gender))
+x.f <- x %>%
+  group_by(PartTimeFullTime) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(pct = n /sum(n)*100) 
+  
+head(x.f)
+ggplot(data=x.f) + 
+  geom_bar(mapping = aes(x=PartTimeFullTime, y=pct, fill=pct), stat = "identity") +
+  ggtitle("Porcentajes Tiempo Total/Parcial semanal de Mujeres")
+
+
+```
+
+### 6.2 Interpretación
+Interpretad los resultados y dad respuesta a la pregunta planteada
+
+De la muestra analizada se sacan las siguientes conclusiones:
+  - El 94.90 % de los hombres trabajan a jornada completa 
+  - El 77,44 % de las mujeres trabajan a jornada completa
+  - El  5.10 % de los hombres trabajan a media jornada
+  - El 22,56 % de las mujeres trabajan a media jornada
+Como vemos, es mayor el % de mujeres contra el de hormbres, cuya modalidad de trabajo es media jornada
+
+### 6.3 Hipótesis nula y alternativa
+La pregunta que realizamos sobre los datos es:
+¿La proporción de personas que trabajan a tiempo completo es diferente para hombres que para mujeres?
+Escribid la hipótesis nula y la alternativa teniendo en cuenta la pregunta formulada.
+
+Hipótesis:
+
+$H_0 : P_m = P_f :$      La proporción de personas que trabajan a tiempo completo es igual para hombre que para mujeres.
+
+$H_1 : P_m \neq P_f :$   La proporción de personas que trabajan a tiempo completo es distintas para hombre que para mujeres.
+
+### 6.4 Tipo de test
+Indicad qué tipo de test aplicaréis y justificarlo.
+
+Voy a utilizar un test bilateral de Contraste de dos muestras independientes sobre la proporción, ya que la hipótesis alternativa dice que la proporción puede se diferente por cualquiera de los dos lados.
+
+### 6.5 Cálculos 
+```{r echo = TRUE, message= FALSE, warning=FALSE}  
+
+x.m <- x.m[x.m$PartTimeFullTime=="F",]
+x.f <- x.f[x.f$PartTimeFullTime=="F",]
+str(x.m)
+str(x.f)
+p1<-x.m$pct/100
+p2<-x.f$pct/100
+n1<-x.m$n
+n2<-x.f$n
+alfa<-0.05
+
+p <- (n1*p1 + n2*p2) / (n1+n2)
+zobs <- (p1-p2) / (sqrt(p*(1-p) *(1/n1+1/n2)))
+zcrit <- qnorm(alfa, lower.tail = FALSE)
+pvalue <- pnorm(zobs, lower.tail = FALSE)
+c(zobs,zcrit,pvalue)
+```
+
+### 6.6 Conclusión
+A partir de los valores obtenidos, responded la pregunta formulada.
+
+Con los valores obtenidos, tenemos que rechazar la hipótesis nula $H_0 : P_m = P_f$ La proporción de personas que trabajan a tiempo completo es igual para hombre que para mujeres, ya que el valor observado 52.16 está muy por encima de la zona de aceptación del valor crítico 1.64, y además, para corroborar estos datos, el valor p-value obtenido 0.00 está por debajo del valor $\alpha=0.05$ 
+
+
+### 6.7 Comprobacion
+Comprobar si los valores obtenidos coinciden con los de la función de R prop.test.
+```{r echo = TRUE, message= FALSE, warning=FALSE}
+success<-c( p1*n1, p2*n2)
+nn<-c(n1,n2)
+prop.test(success, nn, alternative="two.sided", correct=FALSE)
+```
+Podemos observar las 2 proporciones (prop1 y prop2) y que el valor de p-value es menor al valor $\alpha=0.05$, con los datos del test rechazamos la hipótesis nula a favor de la alternativa en la que La proporción de personas que trabajan a tiempo completo es distintas para hombre que para mujeres.
+
+##########################
+## 7 - Salario por hora
+##########################
+Anteriormente hemos comparado el salario semanal entre hombres y mujeres. Ahora bien, la pregunta que nos hacemos ahora es:
+¿Podemos afirmar que los hombres cobran más que las mujeres por hora trabajada?
+
+```{r echo = TRUE, message= FALSE, warning=FALSE} 
+
+# Hacemos las operaciones necesarias para calcular el precio/hora tanto para hombres como para mujeres
+
+claim$WagesHour <- round(claim$WeeklyWages / claim$HoursWeek, 2)
+head(claim)
+
+```
+
+
+### 7.1 Hipótesis nula y alternativa
+Hipótesis:
+
+$H_0 : \mu_h = \mu_m :$    Los hombres cobran, como mucho, igual que las mujeres por hora trabajada.
+
+$H_1 : \mu_h > \mu_m :$    Los hombres cobran mas que las mujeres por hora trabajada.
+
+### 7.2 Tipo de test
+Voy a utilizar un test de contraste unilateral sobre la media de dos muestras independientes 
+
+### 7.3 Cálculos
+Calculad el estadístico de contraste, el valor crítico y el valor p con un nivel de confianza del 95%. Para
+realizar estos cálculos, usad la función que habéis implementado previamente.
+
+```{r echo = TRUE, message= FALSE, warning=FALSE}
+x.m <- subset(claim, Gender=="M", select = c(WagesHour ))
+x.f <- subset(claim, Gender=="F", select = c(WagesHour ))
+c<-test.contraste(X=x.f, Y=x.m, alfa = 0.05)
+#c( zobs, zcrit, pvalue )
+c
+
+
+```
+
+### 7.4 Conclusión
+El valor observado obtenido es negativo, lo que hace pensar que para nivel de significancia $\alpha=0.05$, en todo caso el precio/hora de los hombres sería inferior al de las mujeres. Por lo tanto, dado que el valor observado cae dentro de la zona de aceptación de la hipótesis nula, no podemos rechazar la hipótesis nula de igualdad entre los dos precios/hora. 
+
+Tomando la decisión a partir del valor p, este corresponde a P(zobs ≥ –0.71) = 0.76, lo cual no permite rechazar la hipótesis nula porque este valor no es inferior al valor de significancia $\alpha=0.05$. 
+En conclusión, no existe evidencia para afirmar que el precio hora de los hombres es superior al precio hora de las mujeres.
+
+
+### 7.5 Comprobación
+Comprobar si los valores obtenidos coinciden con los de la función de R t.test.
+
+```{r echo = TRUE, message= FALSE, warning=FALSE}
+t.test(x.m, x.f, alternative="greater", var.equal=FALSE)
+
+```
+El valor de p-value 0.24 es mayor al valor de significancia 0.05, por lo cual corroboramos la conclusión del punto 7.4
+
+
+###############################
+## 8 Resumen ejecutivo
+###############################
+Resumid las conclusiones principales del análisis. Para ello, podéis resumir las conclusiones de cada uno de
+los apartados.
+
+1. Todos lo datos del dataset se han cargado correctamente
+
+2. La variable UltCost, en escala normal, no cumple una distribución normal, sin embargo en escala logarítmica tiene una distribución normal
+
+3. Se Rechaza la hipótesis nula que afirma que los costes iniciales cubren los costes finales de los siniestros.
+
+4. Queda demostrado que el salario semanal de los hombres es mayor al salario semanal de las mujeres.
+
+5. Los hombres en promedio, cobran al menos 50 Euros mas semanalmente que las mujeres.
+
+6. Rechazamos la hipótesis nula de: La proporción de personas que trabajan a tiempo completo es igual para hombre que para mujeres, ya que demostramos que la proporcion de mujeres que trabaja a tiempo completo es bastante menor
+
+7. Se demuestra que los hombres no cobran mas que las mujeres por hora trabajada, aceptando la hipotesis nula.
