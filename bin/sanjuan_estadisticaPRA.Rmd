@@ -181,12 +181,12 @@ boxplot(formula = income~occupation, data = adult, main = "Salario Anual por Ocu
 ```
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 # Tres primeras columnas del data frame
-datos1 <- datos[, 1:3]
-
+adult1 <- subset(adult, select = c("age", "hours_per_week" , "education_num"))
+adult1
 # Gráfico de las tres columnas
-matplot(datos1, type = "l", lty = 1,
-        ylab = "datos",
-        ylim = c(min(datos), max(datos))) # Límites del eje Y
+matplot(adult1, type = "l", lty = 1,
+        ylab = "adult1",
+        ylim = c(min(adult1), max(adult1))) # Límites del eje Y
 
 ```
 
