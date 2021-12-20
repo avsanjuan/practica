@@ -182,11 +182,9 @@ boxplot(formula = income~occupation, data = adult, main = "Salario Anual por Ocu
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 # Tres primeras columnas del data frame
 adult1 <- subset(adult, select = c("age", "hours_per_week" , "education_num"))
-adult1
-# Gráfico de las tres columnas
-matplot(adult1, type = "l", lty = 1,
-        ylab = "adult1",
-        ylim = c(min(adult1), max(adult1))) # Límites del eje Y
+ggplot(data = adult, mapping = aes(x = age)) + geom_bar(colour="green", fill="black")
+ggplot(data = adult, mapping = aes(x = hours_per_week)) + geom_bar(colour="green", fill="black")
+ggplot(data = adult, mapping = aes(x = education_num)) + geom_bar(colour="green", fill="black")
 
 ```
 
