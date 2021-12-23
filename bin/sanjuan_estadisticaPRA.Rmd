@@ -229,6 +229,17 @@ Se asume normalidad ya que el tamaño de la muestra es lo bastante grande, y voy
 
 #### 3.1.3 Aplicación, interpretación y comprobación del test (por el género y por el caso racial)
 
+- Caso por genero
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+Fs <- adult$income[adult$gender=="Female"] # Mujeres
+Ms <- adult$income[adult$gender=="Male"] # Hombres
+
+var.test(x=Fs,y=Ms)
+
+```
+
+
+
 ################################
 ## 4 Modelo de regresión lineal.
 ################################
