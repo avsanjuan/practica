@@ -72,7 +72,36 @@ Verás que, en relación a estos datos, pondremos el foco en el estudio de la pr
   return(result)
 }
 ```
+ 
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+mediaTest <- function(F, M, alfa=0.05,d0=0,twotail=TRUE){
+n1 <- length(F) # Tamaño muestra 1
+n2 <- length(M) # Tamaño muestra 2
+s1 <- sd(F) # Desviación típica muestra 1
+s2 <- sd(M) # Desviación típica muestra 2
+mean1 <- mean(F) # Media muestra 1
+mean2 <- mean(M) # Media muestra 2
+# Calculamos los grados de libertad
+df <- ((s1^2/n1 + s2^2/n2)^2) / (((s1^2/n1)^2/(n1-1))+((s2^2/n2)^2/(n2-1)))
+# Calculamos el valor observado, el estadístico de contraste
+tobs <- (mean2-mean1-d0) / sqrt(s1^2/n1 + s2^2/n2)
+if (twotail==TRUE){
+# Obtenemos el valor crítico que define la región de aceptación
+tcritU <- qt(alfa/2, df, lower.tail=FALSE)
+# Calculamos el p-valor
+pvalue <-pt(abs(tobs), df, lower.tail=FALSE)*2
+}
+else{ #twotail==FALSE
+tcritU <- qt(alfa, df, lower.tail=FALSE)
+# Calculamos el p-valor
+pvalue <- pt(tobs, df, lower.tail=FALSE)
+}
 
+#Mostramos los resultados
+result <-c(tobs, tcritU, pvalue, df)
+return(result) 
+}
+```
 
 #################################################################################
 ## Librerias
@@ -229,86 +258,25 @@ Se asume normalidad ya que el tamaño de la muestra es lo bastante grande, y voy
 
 #### 3.1.3 Aplicación, interpretación y comprobación del test (por el género y por el caso racial)
 
-
-Función de cálculo 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
-mediaTest <- function(F, M, alfa=0.05,d0=0,twotail=TRUE){
-n1 <- length(F) # Tamaño muestra 1
-n2 <- length(M) # Tamaño muestra 2
-s1 <- sd(F) # Desviación típica muestra 1
-s2 <- sd(M) # Desviación típica muestra 2
-mean1 <- mean(F) # Media muestra 1
-mean2 <- mean(M) # Media muestra 2
-# Calculamos los grados de libertad
-df <- ((s1^2/n1 + s2^2/n2)^2) / (((s1^2/n1)^2/(n1-1))+((s2^2/n2)^2/(n2-1)))
-# Calculamos el valor observado, el estadístico de contraste
-tobs <- (mean2-mean1-d0) / sqrt(s1^2/n1 + s2^2/n2)
-if (twotail==TRUE){
-# Obtenemos el valor crítico que define la región de aceptación
-tcritU <- qt(alfa/2, df, lower.tail=FALSE)
-# Calculamos el p-valor
-pvalue <-pt(abs(tobs), df, lower.tail=FALSE)*2
-}
-else{ #twotail==FALSE
-tcritU <- qt(alfa, df, lower.tail=FALSE)
-# Calculamos el p-valor
-pvalue <-pt(tobs, df, lower.tail=FALSE)
-}
-
-#Mostramos los resultados
-cbind(c(tobs, tcritU, pvalue, df))
-}
-```
-
-```{r echo = TRUE, message= FALSE, warning=FALSE}
- test.contraste<- function(X, Y, alfa=0.05, delta=0){
-
-  var1 <- var(X)
-  mean1 <- mean(X[,1])
-  nreg <- count(X)
-  n1<-nreg$n
-
-  var2 <- var(Y)
-  mean2 <- mean(Y[,1])
-  nreg <- count(Y)
-  n2 <- nreg$n
-
-  
-  zobs <- (mean1-mean2-delta)/sqrt(var1/n1 + var2/n2)
-  zcrit <- qnorm(1-alfa)
-  pvalue <- pnorm(zobs, lower.tail=FALSE)
-  
-  result <- c( zobs, zcrit, pvalue )
-
-  return(result)
-}
-```
-
 - Caso por genero
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 Fs <- adult$income[adult$gender=="Female"] # Mujeres
 Ms <- adult$income[adult$gender=="Male"] # Hombres
-ResulTS<-cbind(mediaTest(Fs,Ms))
-ResulTS
-adult.m <-subset(adult, gender == 'Male',  select = c(income) )
-adult.f <-subset(adult, gender == 'Female',  select = c(income) )
-results2 <- test.contraste(adult.f,adult.m)
-results2
+Result<-mediaTest(Fs,Ms)
+Result
 
-var.test(x=Fs,y=Ms)
-
+t.test(x=Ms,y=Fs)
 ```
 - Caso por raza
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 Ws <- adult$income[adult$race=="White"] # Raza Blanca
 Bs <- adult$income[adult$race=="Black"] # Raza Negra
-ResulTS<-cbind(mediaTest(Ws,Bs, d0=6450))
-ResulTS
-var.test(x=Ws,y=Bs)
+delta <-6450
+Result<-mediaTest(Bs,Ws, d0=6450)
+Result
+t.test(x=Ws,y=Bs, delta=delta)
 
 ```
-
-
 
 
 ################################
@@ -319,7 +287,17 @@ var.test(x=Ws,y=Bs)
 
 • Estima un modelo de regresión lineal múltiple que tenga como variables explicativas: age, education_num, hours_per_week y gender, y como variable dependiente el Income.
 
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+Model.a <- lm(income~age+education_num+hours_per_week+gender, data=adult)
+summary(Model.a)
+```
+
 • Genera un segundo modelo pero esta vez añadiendo la variable race.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+Model.b <- lm(income~age+education_num+hours_per_week+gender+race, data=adult)
+summary(Model.b)
+```
 
 ### 4.2 Interpretación de los modelos
 
