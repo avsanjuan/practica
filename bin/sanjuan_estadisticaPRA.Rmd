@@ -150,6 +150,16 @@ colnames(adult)[7] <- "gender"
 ```
 
 ```{r echo = TRUE, message= FALSE, warning=FALSE}
+#cambio de nombre a la columna "sex" por "gender"
+adult$gender <- as.factor(adult$gender)
+adult$race <- as.factor(adult$race)
+adult$marital_status <- as.factor(adult$marital_status)
+adult$workclass <- as.factor(adult$workclass)
+adult$occupation <- as.factor(adult$occupation)
+head(adult)
+```
+
+```{r echo = TRUE, message= FALSE, warning=FALSE}
 #estudio de la normalidad en "income"
 z<-adult$income
 hist(z, freq = F, xlim = c(10, 100), border = "gray50")
@@ -288,6 +298,7 @@ t.test(x=Ws,y=Bs, delta=delta)
 • Estima un modelo de regresión lineal múltiple que tenga como variables explicativas: age, education_num, hours_per_week y gender, y como variable dependiente el Income.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
+unique(adult$gender)
 Model.a <- lm(income~age+education_num+hours_per_week+gender, data=adult)
 summary(Model.a)
 ```
@@ -321,7 +332,16 @@ Por último, para profundizar en la calidad del ajuste deben analizarse los resi
 
 De nuevo, sólo por el segundo modelo estimado, realiza la predicción del income esperado para las siguientes características: age=24, education_num= “4”, hours_per_week=“40”, gender=" Female“, race=”Black".
 
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+datosPre = data.frame(age=24, education_num=4, hours_per_week=40, gender="Female", race="Black")
+predict(Model.b, datosPre)
+```
+
 Proporciona, además, el intervalo de confianza del 95%.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+confint(object=Model.b, level=0.95)
+```
 
 ##########################
 ## 5 Regressión logística
