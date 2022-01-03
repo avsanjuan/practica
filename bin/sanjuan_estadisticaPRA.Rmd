@@ -371,6 +371,12 @@ Siga los pasos que se especifican a continuación.
 
 Genere los conjuntos de datos para entrenar el modelo y para testarlo. Puedes fijar el tamaño de la muestra de entrenamiento a un 80% del original.
 
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+set.seed(1649)
+training<- sample_frac(adult, .8)
+test<- setdiff(adult, training)
+```
+
 ### 5.2 Modelo predictivo
 
 Entrene el modelo con el conjunto que acaba de generar. Utilice, como valores de referencia, el valor mayoritario de cada variable. Por ejemplo, para race, utilizaremos White.
