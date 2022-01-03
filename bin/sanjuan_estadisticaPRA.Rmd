@@ -315,6 +315,9 @@ Interpreta los modelos lineales ajustados y valora la calidad del ajuste:
 
 – ¿La inclusión de la variable race ha supuesto una mejora del segundo modelo respecto al primero?
 
+Al ejecutar la función, cada variable explicativa tiene un coeficiente, y es la suma de los valores de estas variables por sus coeficientes mas el coeficiente de la variable explicada, lo que determina el valor de la predicción , 
+normalmente cuantas mas variables explicativas, mas fiable sería el modelo, es por ello que al incluir la variable race ha mejorado la calidad del modelo a 0.67
+
 ### 4.3 Análisis de residuos
 
 Por último, para profundizar en la calidad del ajuste deben analizarse los residuos que nos indicarán realmente cómo se ajusta nuestro modelo a los datos muestrales. Lo haremos sólo por el segundo de los modelos lineales obtenidos.
@@ -322,6 +325,12 @@ Por último, para profundizar en la calidad del ajuste deben analizarse los resi
 • La salida de ‘summary()‘ presenta los principales estadísticos de la distribución de los residuos. Analiza los valores estimados de los estadísticos.
 
 • Realiza ahora un análisis visual de los residuos. ¿Qué podemos decir sobre la bondad de la adecuación del modelo?
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+residuos <- rstandard(Model.b)
+valor.ajustados <- fitted(Model.b)
+plot(valor.ajustados, residuos)
+```
 
 ### 4.4 Predicción
 
