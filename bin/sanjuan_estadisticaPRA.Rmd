@@ -375,11 +375,18 @@ Genere los conjuntos de datos para entrenar el modelo y para testarlo. Puedes fi
 set.seed(1649)
 training<- sample_frac(adult, .8)
 test<- setdiff(adult, training)
+training
+test
 ```
 
 ### 5.2 Modelo predictivo
 
 Entrene el modelo con el conjunto que acaba de generar. Utilice, como valores de referencia, el valor mayoritario de cada variable. Por ejemplo, para race, utilizaremos White.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+modelo1 <- glm(Less50 ~ . -income, data = training, family = binomial)
+summary(modelo1)
+```
 
 ### 5.3 Interpretación
 
@@ -390,6 +397,18 @@ Interpreta el modelo ajustado. Concretamente, explica la contribución de las va
 A continuación analiza la precisión del modelo, comparando la predicción del modelo contra el conjunto de prueba (testing_set). Asumiremos que la predicción del modelo es 1 (salario por debajo de 50k€) si la probabilidad del modelo de regresión logística es superior o igual a 0.5 y 0 de lo contrario. Analice la matriz de confusión y las medidas de sensibilidad y especificidad.
 
 Nota: Toma como categoría de interés que el salario esté por debajo de 50k€. Por tanto, Less50 igual a 1 será el caso positivo en la matriz de confusión y 0 el caso negativo.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(vcd)
+predicciones <- ifelse(test = modelo1$fitted.values >= 0.5, yes = 1, no = 0)
+matriz_confusion <- table(modelo1$model$Less50, predicciones,
+                          dnn = c("observaciones", "predicciones"))
+matriz_confusion
+mosaic(matriz_confusion, shade = T, colorize = T,
+       gp = gpar(fill = matrix(c("green3", "red2", "red2", "green3"), 2, 2)))
+
+mean(predicciones == training)
+```
 
 ### 5.5 Predicción
 
