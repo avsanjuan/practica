@@ -414,9 +414,30 @@ mean(predicciones == training)
 
 Utiliza el modelo anterior para realizar predicciones. Haga el cálculo de la predicción manualmente, y use la función predict para validar.
 
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+summary(modelo1)
+```
+
 – ¿Con qué probabilidad el salario de un individuo será menor a 50k€ para un hombre blanco de 20 años de edad, autónomo (self-employed), con 3 años de estudios, soltero, trabajando en el sector profesional, y ¿trabajando actualmente unas 25 horas semanales? 
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+#Cálculo manual
+pr.manual<-16.10 - (20*0.03) - (3*0.29) - (25*0.03) - 8.41 - 8.15 + 0.80 + 5.98 + 1.83
+plogis(pr.manual)
+#Cálculo con función
+datosPre = data.frame(age=20, education_num=3, hours_per_week=25, gender="Male", race="White", marital_status="Single", workclass="Self-Employed",occupation="Professional", income=0)
+plogis(predict(modelo1, datosPre))
+```
 
 – ¿Con qué probabilidad el salario de un individuo será menor a 50k€ para un hombre negro de 60 años de edad, con trabajo gubernamental, con 15 años de estudios, casado, trabajando como ‘white-collar’, y ¿trabajando actualmente unas 35 horas semanales?
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+#Calculo manual
+pr.manual<-16.10 - (60*0.03) - (15*0.29) - (35*0.03) - 8.41 - 1.73 - 2.68  - 1.71
+plogis(pr.manual)
+#Calculo con función
+datosPre = data.frame(age=60, education_num=15, hours_per_week=35, gender="Male", race="Black", marital_status="Married", workclass="Government",occupation="White-Collar", income=0)
+plogis(predict(modelo1, datosPre))
+```
 
 ##################################################
 ## 6 Análisis de la varianza (ANOVA) de un factor
