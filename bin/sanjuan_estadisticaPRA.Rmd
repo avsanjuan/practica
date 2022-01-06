@@ -419,8 +419,8 @@ confusionMatrix(table(table$Less50, table$predicted_class), positive = "1")
 predicciones <- ifelse(test = modelo1$fitted>sel_cutoff, 1, 0)
 
 mc <- table(modelo1$model$Less50, predicciones, dnn = c("observaciones", "predicciones"))
-mosaic(mc, shade = T, colorize = T,
-       gp = gpar(fill = matrix(c("green3", "red2", "red2", "green3"), 2, 2)))
+#mosaic(mc, shade = T, colorize = T,
+#       gp = gpar(fill = matrix(c("green3", "red2", "red2", "green3"), 2, 2)))
 
 ```
 
@@ -476,7 +476,6 @@ Completa los siguientes apartados:
 Explica el modelo que se plantea en el ANOVA.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-#res<-lm(income~race, data=adult)
 res<-aov(income~race, data=adult)
 res
 ```
@@ -564,6 +563,15 @@ La modelización con ANOVA facilita la inclusión de múltiples factores. Estamo
 ### 7.1 Estudio visual de la interacción.
 
 • Calcula la tabla cruzada entre razas y empleos para saber cuántas observaciones hay por condición. ¿Se trata de un escenario balanceado? Valora los posibles inconvenientes de la modelización basada en anova en caso de un escenario no balanceado. 
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+table(adult$race,adult$occupation)
+
+res<-aov(income~race+occupation+race:occupation, data=adult)
+res
+anova(res)
+
+```
 
 • Representa la interacción entre ambos factores y comenta los gráficos resultantes.
 
