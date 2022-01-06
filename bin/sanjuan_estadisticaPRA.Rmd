@@ -392,22 +392,36 @@ summary(modelo1)
 
 Interpreta el modelo ajustado. Concretamente, explica la contribución de las variables explicativas con coeficiente estadísticamente significativo para predecir el salario de los individuos.
 
+Observando la salida del modelo (función summary) vemos que muestra todas las variables (con sus valores en caso de ser factor) que son significativas para la predicción, de estas, no van a contribuir apenas aquellas cuyo p-value sea superior a 0.05 por ejemplo marital-status con valor "widowerd" y para el caso de race, los valores "Asian-Pac-Islander" y "Other"
+
 ### 5.4 Matriz de confusión
 
 A continuación analiza la precisión del modelo, comparando la predicción del modelo contra el conjunto de prueba (testing_set). Asumiremos que la predicción del modelo es 1 (salario por debajo de 50k€) si la probabilidad del modelo de regresión logística es superior o igual a 0.5 y 0 de lo contrario. Analice la matriz de confusión y las medidas de sensibilidad y especificidad.
 
 Nota: Toma como categoría de interés que el salario esté por debajo de 50k€. Por tanto, Less50 igual a 1 será el caso positivo en la matriz de confusión y 0 el caso negativo.
 
+
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-library(vcd)
-predicciones <- ifelse(test = modelo1$fitted.values >= 0.5, yes = 1, no = 0)
-matriz_confusion <- table(modelo1$model$Less50, predicciones,
-                          dnn = c("observaciones", "predicciones"))
-matriz_confusion
-mosaic(matriz_confusion, shade = T, colorize = T,
+library(caret)
+library(broom)
+library(lattice)
+
+sel_cutoff = 0.50
+
+table= augment(x=modelo1, newdata=training, type.predict='response') 
+
+# Se clasifica utilizando el punto de corte
+table=table %>% mutate(predicted_class=if_else(.fitted>sel_cutoff, 1, 0) %>% as.factor(), Less50= factor(Less50))
+
+# Matriz de confusión
+confusionMatrix(table(table$Less50, table$predicted_class), positive = "1")
+
+predicciones <- ifelse(test = modelo1$fitted>sel_cutoff, 1, 0)
+
+mc <- table(modelo1$model$Less50, predicciones, dnn = c("observaciones", "predicciones"))
+mosaic(mc, shade = T, colorize = T,
        gp = gpar(fill = matrix(c("green3", "red2", "red2", "green3"), 2, 2)))
 
-mean(predicciones == training)
 ```
 
 ### 5.5 Predicción
@@ -448,6 +462,10 @@ plogis(predict(modelo1, datosPre))
 En este apartado, nos centraremos en analizar la existencia de diferencias significativas de income entre los diferentes grupos raciales. Tomaremos siempre un nivel de significación del 5%.
 
 – Haga un análisis visual de esta dependencia.
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+ggplot(data = adult, aes(x = income, y = race, group = race)) + 
+  geom_line(aes(color = race))
+```
 
 ### 6.2 Modelo ANOVA
 
@@ -457,21 +475,55 @@ Completa los siguientes apartados:
 
 Explica el modelo que se plantea en el ANOVA.
 
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+#res<-lm(income~race, data=adult)
+res<-aov(income~race, data=adult)
+res
+```
+
 #### 6.2.2 Indica las hipótesis nula y alternativa
 
 Escribid las hipótesis nula y alternativa.
 
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+unique(adult$race)
+```
+
+$H_0 : \alpha_1 = \alpha_2 = \alpha_3 = \alpha_4 = \alpha_5$  Donde $\alpha_n$ es la media de "income"por raza
+
+$H_1 : \alpha_i \ne \alpha_j$ para algún $i \ne j$   
+
 #### 6.2.3 Estima la signifcación del factor grupo racial
 
-Calculad la variabilidad explicada per la variable race sobre la variable income mediante la función anova().
+Calculad la variabilidad explicada por la variable race sobre la variable income mediante la función anova().
 
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+taov<-anova(res)
+taov
+```
 #### 6.2.4 Estima los efectos de los niveles de factor
 
 Interpretad los resultados del modelo generado en el apartado anterior.
 
+Obtenemos un p-valor  claramente inferior a un nivel de significación del 5 %. Por lo tanto, aceptamos la hipótesis alternativa y concluimos que el factor es significativo.
+Es decir, existen diferencias significativas de la variable income entre los diferentes valores de la variable race. 
+
 #### 6.2.5 Realiza los contrastes dos-a-dos
 
 Para los contrastes dos-a-dos, podeis usar, por ejemplo, la función HSD.test() del paquete agricolae.
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Función HSD.test()
+library(agricolae)
+out <- HSD.test(res,"race", group=TRUE,console=TRUE, main="Yield of income with different race")
+plot(out)
+out<-HSD.test(res,"race", group=FALSE)
+print(out$comparison)
+
+# Función pairwise.t.test()
+library(stats)
+pairwise.t.test(adult$income,adult$race, p.adj=c("none"))
+```
+
 
 #### 6.2.6 Adecuación del modelo
 
@@ -481,10 +533,27 @@ Mostrad la adecuación del modelo ANOVA en los dos siguientes sub-apartados.
 
 sobre la homocedasticidad de los residuos. Mostrad e interpretad este gráfico.
 
-##### 6.2.6.2 Normalidad de los residuos Se puede comprovar el supuesto de normalidad de los residuos
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+plot(res,which=1)
+```
+Observamos 5 tiras verticales de puntos que están situadas en las medias de cada grupo. Estas corresponden a los valores ajustados de las observaciones. La
+disposición de los residuos muestra una dispersión parecida en cada tira. Por lo tanto, no se aprecia efecto de embudo.
+
+
+##### 6.2.6.2 Normalidad de los residuos Se puede comprobar el supuesto de normalidad de los residuos
 
 con los gráficos usuales. Aplicad también el test de Kruskal-Wallis e interpretad los resultados.
 
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+qqnorm(res$residuals) 
+qqline(res$residuals)
+
+kruskal.test(income~race,data=adult)
+boxplot(income~race,data=adult,xlab="Race", ylab="Income")
+```
+El primer gráfico muestra que los residuos guardan una cierta normalidad
+
+En el test de Kruskal-Wallis, resulta un p-valor inferior al nivel de significación. Por lo tanto, aceptamos que existen diferencias significativas del salario en función a la raza. El gráfico sugiere que la media del salario en la raza blanca es superior al resto de ellas (las cuales están bastante mas igualadas entre ellas)
 
 ##########################
 ## 7 ANOVA multifactorial
