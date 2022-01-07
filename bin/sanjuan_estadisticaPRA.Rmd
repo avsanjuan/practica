@@ -375,8 +375,7 @@ Genere los conjuntos de datos para entrenar el modelo y para testarlo. Puedes fi
 set.seed(1649)
 training<- sample_frac(adult, .8)
 test<- setdiff(adult, training)
-training
-test
+
 ```
 
 ### 5.2 Modelo predictivo
@@ -560,20 +559,32 @@ En el test de Kruskal-Wallis, resulta un p-valor inferior al nivel de significac
 
 La modelización con ANOVA facilita la inclusión de múltiples factores. Estamos interesados en incluir el factor occupation para saber si existen diferencias en los ingresos entre los empleos, a la vez que estimar la existencia de interacción significativa entre ambos factores: grupo racial y empleo.
 
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+res<-aov(income~race+occupation+race:occupation, data=adult, contrasts=list(race=contr.sum, occupation=contr.sum))
+res
+anova(res)
+```
+
 ### 7.1 Estudio visual de la interacción.
 
 • Calcula la tabla cruzada entre razas y empleos para saber cuántas observaciones hay por condición. ¿Se trata de un escenario balanceado? Valora los posibles inconvenientes de la modelización basada en anova en caso de un escenario no balanceado. 
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 table(adult$race,adult$occupation)
-
-res<-aov(income~race+occupation+race:occupation, data=adult)
-res
-anova(res)
-
+model.tables(res, "means")
 ```
+Se trata de un modelo NO Balanceado, los problemas que puede tener es un posible sesgo y ejecución de patrones propios de las muestras mayoritarias
 
 • Representa la interacción entre ambos factores y comenta los gráficos resultantes.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+qplot(adult$race,adult$income, stat="summary", fun.y="mean")
+qplot(adult$occupation,adult$income, stat="summary", fun.y="mean")
+plot(adult$income ~ adult$race + adult$occupation, col=rainbow(6))
+plot(adult$race:adult$occupation,adult$income, col=rainbow(2))
+boxplot(adult$income ~ adult$race + adult$occupation, col=rainbow(6))
+interaction.plot(adult$race,adult$occupation,adult$income)
+```
 
 ##################
 ## 8 Conclusiones
