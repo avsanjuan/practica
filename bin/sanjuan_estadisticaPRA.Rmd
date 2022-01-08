@@ -46,6 +46,28 @@ Estos datos nos ofrecen múltiples posibilidades para consolidar los conocimient
 
 Verás que, en relación a estos datos, pondremos el foco en el estudio de la probabilidad de no alcanzar cierto umbral de retribución económica en base a las características descritas en el conjunto de datos.
 
+
+
+#################################################################################
+## Librerias
+#################################################################################
+Carga de librerias a utilizar
+```{r echo = FALSE, message= FALSE, warning=FALSE}
+# Carga de los paquetes R que vamos a usar
+library(ggplot2)
+library(corrplot)
+library(dplyr)
+library(stringr)
+library(lubridate)
+library(reshape)
+library(VIM)
+library(MASS)
+library(robustHD)
+library(pastecs)
+library(psych)
+library(nortest)
+```
+
 #################################################################################
 ## Test de contraste de medias con varianza desconocida para 2 muestras independientes 
 #################################################################################
@@ -77,26 +99,6 @@ pvalue <- pt(tobs, df, lower.tail=FALSE)
 result <-c(tobs, tcritU, pvalue, df)
 return(result) 
 }
-```
-
-#################################################################################
-## Librerias
-#################################################################################
-Carga de librerias a utilizar
-```{r echo = TRUE, message= FALSE, warning=FALSE}
-# Carga de los paquetes R que vamos a usar
-library(ggplot2)
-library(corrplot)
-library(dplyr)
-library(stringr)
-library(lubridate)
-library(reshape)
-library(VIM)
-library(MASS)
-library(robustHD)
-library(pastecs)
-library(psych)
-library(nortest)
 ```
 ####################################################
 ## 2 Lectura del archivo y preparación de los datos.
@@ -239,9 +241,9 @@ Donde $\mu_1$ es el salario de los hombre y $\mu_2$ es el salario de las mujeres
 
 Hay que extrapolar el importe anual a importe semanal 6450/52=124.04
 
-$H_0 : \mu_1 - \mu_2 = 124.14$  
+$H_0 : \mu_1 - \mu_2 = 6.50$  
 
-$H_1 : \mu_1 - \mu_2 < 124.04$
+$H_1 : \mu_1 - \mu_2 < 6.50$
 
 Donde $\mu_1$ es el salario de la gente blanca y $\mu_2$ es el salario de la gente negra
 
@@ -276,13 +278,13 @@ concluir que el salario de los hombres es superior al de las mujeres.
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 Ws <- adult$income[adult$race=="White"] # Raza Blanca
 Bs <- adult$income[adult$race=="Black"] # Raza Negra
-delta <-124.04
-Result<-mediaTest(Bs,Ws, d0=124.04)
+delta <-6.50
+Result<-mediaTest(Bs,Ws, d0=6.50)
 Result
 t.test(x=Ws,y=Bs, delta=delta)
 t.test(x=Ws,y=Bs, delta=delta)$p.value
 ```
-El valor p-value es 0, por lo que hay que rechazar la hipótesis nula a favor de la alternativa y concluir que las muestras de raza blanca NO cobran al menos 6450 anualmente más que los de raza negra
+El valor p-value es nenor al valor 0.05, por lo que hay que rechazar la hipótesis nula a favor de la alternativa y concluir que las muestras de raza blanca NO cobran al menos 6450 anualmente más que los de raza negra
 
 ################################
 ## 4 Modelo de regresión lineal.
@@ -324,13 +326,28 @@ Por último, para profundizar en la calidad del ajuste deben analizarse los resi
 
 • La salida de ‘summary()‘ presenta los principales estadísticos de la distribución de los residuos. Analiza los valores estimados de los estadísticos.
 
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+summary(Model.b)
+```
+El coeficiente de determinación R2 indica que el modelo es capaz de explicar el 67% de la variabilidad presente en la variable respuesta (income) mediante las variables independientes
+
+El p-value obtenido en el test F (2,2x10−16) determina que sí es significativamente superior la varianza explicada por el modelo en comparación con la varianza total, por lo que podemos aceptar nuestro modelo como válido y útil.
+
 • Realiza ahora un análisis visual de los residuos. ¿Qué podemos decir sobre la bondad de la adecuación del modelo?
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+library(ResourceSelection)
+hoslem.test(adult$income,fitted(Model.b))
+
 residuos <- rstandard(Model.b)
 valor.ajustados <- fitted(Model.b)
 plot(valor.ajustados, residuos)
+qqnorm(residuos)
 ```
+Por un lado se observa un patrón de dispersión irregular. es decir que no se cumple el supuesto de varianza constante en los errores del modelo.
+en el otro grafico, se muestra que los datos se ajustan bien a una normal.
+
 
 ### 4.4 Predicción
 
@@ -404,6 +421,7 @@ Nota: Toma como categoría de interés que el salario esté por debajo de 50k€
 library(caret)
 library(broom)
 library(lattice)
+#library(mosaic)
 
 sel_cutoff = 0.50
 
@@ -417,7 +435,7 @@ confusionMatrix(table(table$Less50, table$predicted_class), positive = "1")
 
 predicciones <- ifelse(test = modelo1$fitted>sel_cutoff, 1, 0)
 
-mc <- table(modelo1$model$Less50, predicciones, dnn = c("observaciones", "predicciones"))
+#mc <- table(modelo1$model$Less50, predicciones, dnn = c("observaciones", "predicciones"))
 #mosaic(mc, shade = T, colorize = T,
 #       gp = gpar(fill = matrix(c("green3", "red2", "red2", "green3"), 2, 2)))
 
@@ -585,6 +603,7 @@ plot(adult$race:adult$occupation,adult$income, col=rainbow(2))
 boxplot(adult$income ~ adult$race + adult$occupation, col=rainbow(6))
 interaction.plot(adult$race,adult$occupation,adult$income)
 ```
+Examinando los gráficos, vemos lo que ya veníamos observando en los demás puntos del estudio, si analizamos la variable "income" en función de la raza, la muestra que más alto tiene la media de esta variable es White, si lo analizamos por "occupation", es wihe-collar quien tiene la media mas alta respecto al salario, pero no hay que dejar de obserbar que "blue-collar" tambien tiene una media de income muy alta, con la peculiaridad que tiene muchos outliers por debajo del 4 cuartil, eso significa que hay obervaciones muy por encima de la media.
 
 ##################
 ## 8 Conclusiones
@@ -592,9 +611,15 @@ interaction.plot(adult$race,adult$occupation,adult$income)
 
 Resuma las principales conclusiones del análisis. Para ello, puede resumir las conclusiones de cada uno de los apartados.
 
-
-
-
+Aunque los gráficos indican cierta normalidad en la variable income, al hacer el test de Lilliefors, se comprueba que no siguen esta normalidad.
+Género masculino, Raza blanca, politicos, casados y directivos son los colectivos que mayor salario anual tienen.
+La mayoria de las muestras están entre 20 y 45 años, trabajan alrededor de 40 horas semanales y su nivel de estudios está entre 9 y 10 años.
+Tras aplicar un test de hipótesis unilateral de 2 muestras independientes con varianza desconocida, se puede concluir que el género masculino cobra mas que el género femenino y que los miembros de raza blanca no cobran al año mas de 6450 euros que los de raza negra.
+Se ha construido un modelo de regresión lineal donde la variable dependiente es salario y como variables explicativas tenemos la edad, años de educación, horas de trabajo semanal y género con una fiabilidad del 59%, pero si al mismo le incluimos la variable explicativa raza, su fiabilidad sube hasta el 67%.
+El modelo es capaz de predecir el suelto de una mujerm raza negra con 24 años de edad, 9 años de educación y 40 horas semanales en 34.97K anuales.
+Se genera un modelo de regresión logística entrenado con el 80% de los datos originales, para predecir si una muestra cobraría menos de 50K euros al año, y se comprueba que algunos de los valores de las variables explicativas no afectan al resultadode la previsión (aquellos cuyo p-value > 0.05)
+Este modelo tiene una exactitud del 92%
+Se analizan las predicciones del modelo supervisado y se realizan nuevas predicciones.
 
 
 -------------------------------------------------------------------------------------------------------------------------------
