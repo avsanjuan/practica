@@ -1,6 +1,6 @@
 ---
 title: 'A4 Análisis de varianza y repaso del curso'
-author: "Autor: Angel Vicente Sanjuan Martin"
+author: "Autor: Angel Vicente Sanjuán Martín"
 date: "Diciembre-Enero 2021/22"
 output:
   pdf_document: 
@@ -42,7 +42,7 @@ Las variables de esta muestra son:
 
 • income: Salario (anual) del individuo, en k€.
 
-Estos datos nos ofrecen múltiples posibilidades para consolidar los conocimientos y competencias de manipulación de datos, preprocesamiento, análisis descriptivo e inferencia estadística, así como la regresión (lineal y logística) y el Análisis de Variancia (ANOVA).
+Estos datos nos ofrecen múltiples posibilidades para consolidar los conocimientos y competencias de manipulación de datos, preprocesamiento, análisis descriptivo e inferencia estadística, así como la regresión (lineal y logística) y el Análisis de Varianzaa (ANOVA).
 
 Verás que, en relación a estos datos, pondremos el foco en el estudio de la probabilidad de no alcanzar cierto umbral de retribución económica en base a las características descritas en el conjunto de datos.
 
@@ -106,7 +106,7 @@ return(result)
 Leer el archivo CensusIncomedada.txt y guardar los datos en un objeto con identificador denominado adult. A continuación, verifica que los datos se han cargado correctamente.
 
 ```{r echo = TRUE, message= FALSE, warning=FALSE}
-# Guardar en memoría los conjuntos de datos
+# Guardar en memoria los conjuntos de datos
 adult <- read.table('../csv/CensusIncomedata.txt', sep=" ", header=TRUE, dec = ".")
 # Verificar la estructura de datos
 str(adult)
@@ -421,7 +421,6 @@ Nota: Toma como categoría de interés que el salario esté por debajo de 50k€
 library(caret)
 library(broom)
 library(lattice)
-#library(mosaic)
 
 sel_cutoff = 0.50
 
@@ -434,10 +433,9 @@ table=table %>% mutate(predicted_class=if_else(.fitted>sel_cutoff, 1, 0) %>% as.
 confusionMatrix(table(table$Less50, table$predicted_class), positive = "1")
 
 predicciones <- ifelse(test = modelo1$fitted>sel_cutoff, 1, 0)
+mc <- table(modelo1$model$Less50, predicciones, dnn = c("observaciones", "predicciones"))
+mc
 
-#mc <- table(modelo1$model$Less50, predicciones, dnn = c("observaciones", "predicciones"))
-#mosaic(mc, shade = T, colorize = T,
-#       gp = gpar(fill = matrix(c("green3", "red2", "red2", "green3"), 2, 2)))
 
 ```
 
@@ -603,7 +601,7 @@ plot(adult$race:adult$occupation,adult$income, col=rainbow(2))
 boxplot(adult$income ~ adult$race + adult$occupation, col=rainbow(6))
 interaction.plot(adult$race,adult$occupation,adult$income)
 ```
-Examinando los gráficos, vemos lo que ya veníamos observando en los demás puntos del estudio, si analizamos la variable "income" en función de la raza, la muestra que más alto tiene la media de esta variable es White, si lo analizamos por "occupation", es wihe-collar quien tiene la media mas alta respecto al salario, pero no hay que dejar de obserbar que "blue-collar" tambien tiene una media de income muy alta, con la peculiaridad que tiene muchos outliers por debajo del 4 cuartil, eso significa que hay obervaciones muy por encima de la media.
+Examinando los gráficos, vemos lo que ya veníamos observando en los demás puntos del estudio, si analizamos la variable "income" en función de la raza, la muestra que más alto tiene la media de esta variable es White, si lo analizamos por "occupation", es wihe-collar quien tiene la media mas alta respecto al salario, pero no hay que dejar de observar que "blue-collar" también tiene una media de income muy alta, con la peculiaridad que tiene muchos outliers por debajo del 4 cuartil, eso significa que hay observaciones muy por encima de la media.
 
 ##################
 ## 8 Conclusiones
@@ -612,15 +610,16 @@ Examinando los gráficos, vemos lo que ya veníamos observando en los demás pun
 Resuma las principales conclusiones del análisis. Para ello, puede resumir las conclusiones de cada uno de los apartados.
 
 Aunque los gráficos indican cierta normalidad en la variable income, al hacer el test de Lilliefors, se comprueba que no siguen esta normalidad.
-Género masculino, Raza blanca, politicos, casados y directivos son los colectivos que mayor salario anual tienen.
+Género masculino, Raza blanca, políticos, casados y directivos son los colectivos que mayor salario anual tienen.
 La mayoria de las muestras están entre 20 y 45 años, trabajan alrededor de 40 horas semanales y su nivel de estudios está entre 9 y 10 años.
 Tras aplicar un test de hipótesis unilateral de 2 muestras independientes con varianza desconocida, se puede concluir que el género masculino cobra mas que el género femenino y que los miembros de raza blanca no cobran al año mas de 6450 euros que los de raza negra.
 Se ha construido un modelo de regresión lineal donde la variable dependiente es salario y como variables explicativas tenemos la edad, años de educación, horas de trabajo semanal y género con una fiabilidad del 59%, pero si al mismo le incluimos la variable explicativa raza, su fiabilidad sube hasta el 67%.
-El modelo es capaz de predecir el suelto de una mujerm raza negra con 24 años de edad, 9 años de educación y 40 horas semanales en 34.97K anuales.
-Se genera un modelo de regresión logística entrenado con el 80% de los datos originales, para predecir si una muestra cobraría menos de 50K euros al año, y se comprueba que algunos de los valores de las variables explicativas no afectan al resultadode la previsión (aquellos cuyo p-value > 0.05)
+El modelo es capaz de predecir el suelto de una mujer raza negra con 24 años de edad, 9 años de educación y 40 horas semanales en 34.97K anuales.
+Se genera un modelo de regresión logística entrenado con el 80% de los datos originales, para predecir si una muestra cobraría menos de 50K euros al año, y se comprueba que algunos de los valores de las variables explicativas no afectan al resultado de la previsión (aquellos cuyo p-value > 0.05)
 Este modelo tiene una exactitud del 92%
 Se analizan las predicciones del modelo supervisado y se realizan nuevas predicciones.
+Por medio del análisis de la varianza, se demuestra ue existen diferencias entre los salarios de los distintos grupos raciales.
+Se comprueba y calcula la diferencia entre los salarios de los grupos raciales tomados de 2 en 2, y se confirma que la media del salario de la raza banca es superior al resto de las razas.
+También se confirma que al analizar los resultados desde la variable occupation, es el valor white-collar quien tiene el salario mayor.
 
 
--------------------------------------------------------------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------------------------------------
