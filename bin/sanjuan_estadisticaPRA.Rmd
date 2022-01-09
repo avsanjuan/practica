@@ -3,10 +3,10 @@ title: 'A4 Análisis de varianza y repaso del curso'
 author: "Autor: Angel Vicente Sanjuán Martín"
 date: "Diciembre-Enero 2021/22"
 output:
+  word_document: default
   pdf_document: 
     fig_width: 4
     toc: yes
-  word_document: default
   html_document: 
     number_sections: yes
     theme: cosmo
@@ -151,6 +151,7 @@ qqnorm(z)
 qqline(z)
 lillie.test(z)
 ```
+
 comprobamos que "income" sigue una distribución Normal, con el test de liliefors, queda claro que no la sigue pues p-value tiene un valor menor a 0.05
 
 ```{r echo = TRUE, message= FALSE, warning=FALSE}
@@ -170,6 +171,7 @@ boxplot(formula = income~gender, data = adult, main = "Salario Anual por Género
      col = c("purple", "blue", "green3"))
 
 ```
+
 Vemos que el salario es superior en los hombres que en las mujeres, tambien que hay mas outliers en el género masculino 
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
@@ -178,6 +180,7 @@ boxplot(formula = income~race, data = adult, main = "Salario Anual por Raza",
      col = c("purple", "blue", "green3", "red", "grey", "yelow"))
 
 ```
+
 El salario es superior en las muestras de raza blanca, mientras que el resto está bastante igualado
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
@@ -186,6 +189,7 @@ boxplot(formula = income~workclass, data = adult, main = "Salario Anual por Trab
      col = c("purple", "blue", "green3", "red", "grey", "yelow"))
 
 ```
+
 Si hacemos la comparación de salarios por tipo de trabajo, los funcionarios están a la cabeza, seguidos por el sector privado y los autónomos, estos últimos, tienen gran número de outliers por debajo (lo cual indica que podrían declarar el salario mínimo) y por último, el salario más bajo lo tienen los de trabajo desconocido
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
@@ -194,6 +198,7 @@ boxplot(formula = income~marital_status, data = adult, main = "Salario Anual por
      col = c("purple", "blue", "green3", "red", "grey", "yelow"))
 
 ```
+
 Vemos que los salarios mas altos son de los casados, pero también son los que tienen mas outliers
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
@@ -202,6 +207,7 @@ boxplot(formula = income~occupation, data = adult, main = "Salario Anual por Ocu
      col = c("purple", "blue", "green3", "red", "grey", "green1"))
 
 ```
+
 Los Blue-collar (obreros) junto con los white-collar (directivos) son los que mayor salario tienen, pero dentro del primer grupo, vemos que hay muchos valores por debajo (outliers) como es normal
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
@@ -212,6 +218,7 @@ ggplot(data = adult, mapping = aes(x = hours_per_week)) + geom_bar(colour="green
 ggplot(data = adult, mapping = aes(x = education_num)) + geom_bar(colour="green", fill="black")
 
 ```
+
 El primer gráfico es del número de muestras por edad.
 El segunto son las muestras por horas semanales
 El tercero son muestras por nivel de estudios
@@ -270,6 +277,7 @@ Result
 t.test(x=Ms,y=Fs)
 t.test(Ms,Fs)$p.value
 ```
+
 El pvalor del test (0) es inferior al nivel de significación (0.05). Además el valor observado 194.11 es mayor
 que el valor crítico 1.96. Por tanto, podemos rechazar la hipótesis nula a favor de la alternativa y podemos
 concluir que el salario de los hombres es superior al de las mujeres.
@@ -284,6 +292,7 @@ Result
 t.test(x=Ws,y=Bs, delta=delta)
 t.test(x=Ws,y=Bs, delta=delta)$p.value
 ```
+
 El valor p-value es nenor al valor 0.05, por lo que hay que rechazar la hipótesis nula a favor de la alternativa y concluir que las muestras de raza blanca NO cobran al menos 6450 anualmente más que los de raza negra
 
 ################################
@@ -329,6 +338,7 @@ Por último, para profundizar en la calidad del ajuste deben analizarse los resi
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 summary(Model.b)
 ```
+
 El coeficiente de determinación R2 indica que el modelo es capaz de explicar el 67% de la variabilidad presente en la variable respuesta (income) mediante las variables independientes
 
 El p-value obtenido en el test F (2,2x10−16) determina que sí es significativamente superior la varianza explicada por el modelo en comparación con la varianza total, por lo que podemos aceptar nuestro modelo como válido y útil.
@@ -345,6 +355,7 @@ valor.ajustados <- fitted(Model.b)
 plot(valor.ajustados, residuos)
 qqnorm(residuos)
 ```
+
 Por un lado se observa un patrón de dispersión irregular. es decir que no se cumple el supuesto de varianza constante en los errores del modelo.
 en el otro grafico, se muestra que los datos se ajustan bien a una normal.
 
@@ -394,6 +405,7 @@ training<- sample_frac(adult, .8)
 test<- setdiff(adult, training)
 
 ```
+
 
 ### 5.2 Modelo predictivo
 
@@ -515,6 +527,7 @@ Calculad la variabilidad explicada por la variable race sobre la variable income
 taov<-anova(res)
 taov
 ```
+
 #### 6.2.4 Estima los efectos de los niveles de factor
 
 Interpretad los resultados del modelo generado en el apartado anterior.
@@ -550,6 +563,7 @@ sobre la homocedasticidad de los residuos. Mostrad e interpretad este gráfico.
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 plot(res,which=1)
 ```
+
 Observamos 5 tiras verticales de puntos que están situadas en las medias de cada grupo. Estas corresponden a los valores ajustados de las observaciones. La
 disposición de los residuos muestra una dispersión parecida en cada tira. Por lo tanto, no se aprecia efecto de embudo.
 
@@ -565,6 +579,7 @@ qqline(res$residuals)
 kruskal.test(income~race,data=adult)
 boxplot(income~race,data=adult,xlab="Race", ylab="Income")
 ```
+
 El primer gráfico muestra que los residuos guardan una cierta normalidad
 
 En el test de Kruskal-Wallis, resulta un p-valor inferior al nivel de significación. Por lo tanto, aceptamos que existen diferencias significativas del salario en función a la raza. El gráfico sugiere que la media del salario en la raza blanca es superior al resto de ellas (las cuales están bastante mas igualadas entre ellas)
@@ -589,6 +604,7 @@ anova(res)
 table(adult$race,adult$occupation)
 model.tables(res, "means")
 ```
+
 Se trata de un modelo NO Balanceado, los problemas que puede tener es un posible sesgo y ejecución de patrones propios de las muestras mayoritarias
 
 • Representa la interacción entre ambos factores y comenta los gráficos resultantes.
@@ -601,6 +617,7 @@ plot(adult$race:adult$occupation,adult$income, col=rainbow(2))
 boxplot(adult$income ~ adult$race + adult$occupation, col=rainbow(6))
 interaction.plot(adult$race,adult$occupation,adult$income)
 ```
+
 Examinando los gráficos, vemos lo que ya veníamos observando en los demás puntos del estudio, si analizamos la variable "income" en función de la raza, la muestra que más alto tiene la media de esta variable es White, si lo analizamos por "occupation", es wihe-collar quien tiene la media mas alta respecto al salario, pero no hay que dejar de observar que "blue-collar" también tiene una media de income muy alta, con la peculiaridad que tiene muchos outliers por debajo del 4 cuartil, eso significa que hay observaciones muy por encima de la media.
 
 ##################
@@ -611,12 +628,17 @@ Resuma las principales conclusiones del análisis. Para ello, puede resumir las 
 
 Aunque los gráficos indican cierta normalidad en la variable income, al hacer el test de Lilliefors, se comprueba que no siguen esta normalidad.
 Género masculino, Raza blanca, políticos, casados y directivos son los colectivos que mayor salario anual tienen.
+
 La mayoria de las muestras están entre 20 y 45 años, trabajan alrededor de 40 horas semanales y su nivel de estudios está entre 9 y 10 años.
+
 Tras aplicar un test de hipótesis unilateral de 2 muestras independientes con varianza desconocida, se puede concluir que el género masculino cobra mas que el género femenino y que los miembros de raza blanca no cobran al año mas de 6450 euros que los de raza negra.
+
 Se ha construido un modelo de regresión lineal donde la variable dependiente es salario y como variables explicativas tenemos la edad, años de educación, horas de trabajo semanal y género con una fiabilidad del 59%, pero si al mismo le incluimos la variable explicativa raza, su fiabilidad sube hasta el 67%.
+
 El modelo es capaz de predecir el suelto de una mujer raza negra con 24 años de edad, 9 años de educación y 40 horas semanales en 34.97K anuales.
-Se genera un modelo de regresión logística entrenado con el 80% de los datos originales, para predecir si una muestra cobraría menos de 50K euros al año, y se comprueba que algunos de los valores de las variables explicativas no afectan al resultado de la previsión (aquellos cuyo p-value > 0.05)
-Este modelo tiene una exactitud del 92%
+
+Se genera un modelo de regresión logística entrenado con el 80% de los datos originales, para predecir si una muestra cobraría menos de 50K euros al año, y se comprueba que algunos de los valores de las variables explicativas no afectan al resultado de la previsión (aquellos cuyo p-value > 0.05), este modelo tiene una exactitud del 92%
+
 Se analizan las predicciones del modelo supervisado y se realizan nuevas predicciones.
 Por medio del análisis de la varianza, se demuestra ue existen diferencias entre los salarios de los distintos grupos raciales.
 Se comprueba y calcula la diferencia entre los salarios de los grupos raciales tomados de 2 en 2, y se confirma que la media del salario de la raza banca es superior al resto de las razas.
